@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta property="og:site_name" content="flanstore△">
+    <meta property="og:title" content="home">
+    <meta property="og:description" content="simple file sharing website by yurukyan△">
+    <meta name="theme-color" content="#C17342">
+    <title>flanstore△</title>
+    <link rel="stylesheet" type="text/css" href="https://api.yuru.ca/css/base.css">
+    <link rel="stylesheet" type="text/css" href="./main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Quicksand:wght@300..700&family=Zen+Kaku+Gothic+New&family=Zen+Maru+Gothic&display=swap" rel="stylesheet">
+    <link rel="icon" href="./upload.ico">
+    <script src="./main.js" async></script>
+  </head>
+  <body>
+    <div id="background"></div>
+    <header id="header">
+      <p>your current upload url is: <span id="page-url"></span> | contact us if you'd like to change this!</p>
+      <div id="logout-area">
+        <span id="logout">logout</span>
+        <img id="user-pfp"></img>
+      </div>
+    </header>
+    <div id="upload-area">
+      <div id="upload-content">
+        <span>drag your file :3</span>
+        <div class="upload-divider"></div>
+        <p>or, you can upload it with the file picker below:</p>
+        <form method="post" enctype="multipart/form-data" id="file-submit-form" onsubmit="return false;">
+          <input type="file" name="file"/>
+          <button>upload~ :3</button>
+          <p>note: uploading this way will always cause the page to reload >.<</p>
+        </form>        
+        <div class="upload-divider"></div>
+        <button id="cancel-upload">cancel</button>
+      </div>
+    </div>
+    <div id="not-logged-in">
+      <div id="log-in-area">
+        <h1>you're not currently logged in >_<;;</h1>
+        <p>enter your subdomain and password below:</p>
+        <div>
+          <span>subdomain: </span>
+          <input type="username" id="subdomain"/>
+        </div>
+        <div>
+          <span>password: </span>
+          <input type="password" id="password">
+        </div>
+        <button id="login-button">login</button>
+        <p class="white-click-text" id="account-apply-text">if you don't have an account, click here to apply for one~</p>
+        <span>(you can only get one if you're our oomf >.<)</span>
+      </div>
+      <div id="account-apply-area">
+        <h1>if you don't have an account...</h1>
+        <p>feel free to apply for one here~!</p>
+        <div>
+          <span>subdomain: </span>
+          <input type="username" id="application-subdomain"/>
+        </div>
+        <div>
+          <span>password: </span>
+          <input type="password" id="application-password">
+        </div>
+        <div>
+          <span>discord handle: </span>
+          <input type="text" id="application-discord">
+        </div>
+        <p>(the discord handle is just so we can identify who you are, that's all~)</p>
+        <button id="apply-button">apply</button>
+        <p class="white-click-text" id="back-to-login">click here to go back to the login screen~</p>
+      </div>
+    </div>
+    <i class="fa fa-gear settings" id="settings"></i>
+    <div id="settings-section">
+      <div id="settings-text">
+        <input type="checkbox" id="date-check" name="date-check" checked />
+        <label for="date-check">use MM/DD/YYYY date format</label>
+      </div>
+      <i class="fa fa-gear settings" id="new-settings"></i>
+    </div>
+    <div id="below-header">
+      <section id="left-content">
+        <div>
+          <h1>flanstore 🍮📦</h1>
+          <p>drop your files anywhere on the page >w<</p>
+          <p>you can also click the button below to do so :3</p>
+          <button id="upload-button">upload~ :3</button>
+        </div>
+      </section>
+      <section id="file-display">
+        <div id="search-bar">
+          <i class="fa fa-search" style="font-size: 22px; color: white; margin-left: 5px;"></i>
+          <input id="search-input" type="text"/>
+        </div>
+        <table class="file-table">
+          <tr>
+            <th>file name</th>
+            <th>date added</th>
+            <th>size</th>
+            <th style="border-right: none;">url</th>
+          </tr>
+        <tbody id="table-fill"></tbody>
+        </table>
+      </section>
+    </div>
+    <div id="alert-area">
+    </div>
+  </body>
+</html>
