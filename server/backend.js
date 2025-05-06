@@ -174,7 +174,11 @@ app.get('/readFilemap', (req, res) => {
         let fileMap = JSON.parse(fs.readFileSync(`./files/${user}/filemap.json`, {encoding: 'utf8'}));
         if (!userInfo[userIndex].dateFormat) {
             fileMap.forEach(file => {
-                file.dateAdded = `${file.dateAdded.split('/')[1]}/${file.dateAdded.split('/')[0]}/${file.dateAdded.split('/')[2]}`; //makes the date anne compliant. anne certification type shit
+                try {
+                    file.dateAdded = `${file.dateAdded.split('/')[1]}/${file.dateAdded.split('/')[0]}/${file.dateAdded.split('/')[2]}`; //makes the date anne compliant. anne certification type shit
+                } catch {
+                    file.dateAdded = "not a valid date >_<;;";
+                }
             });
         }
         res.send(fileMap);
