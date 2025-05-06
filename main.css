@@ -86,6 +86,7 @@ input[type=text], input[type=username], input[type=password] {
 }
 
 #logout {
+    color: white;
     margin-right: 10px;
     cursor: pointer;
 }
@@ -96,8 +97,8 @@ input[type=text], input[type=username], input[type=password] {
 }
 
 .settings {
+    z-index: 1;
     position: absolute;
-    font-size: 18px;
     bottom: 10px;
     left: 10px;
     cursor: pointer;
@@ -124,6 +125,7 @@ input[type=text], input[type=username], input[type=password] {
 
 #below-header {
     position: relative;
+    height: calc(100vh - 56px - 8px); /* for whatever reason, 8px + header seems to do the trick~ */
 }
 
 #upload-area {
@@ -151,20 +153,22 @@ input[type=text], input[type=username], input[type=password] {
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 50vw;
-    height: calc(100vh - 56px);
-    margin-top: -56px; /* minus the header */
+    width: 50%;
+    height: 100%;
+}
+
+#flanstore-info {
+    margin-bottom: 56px;
 }
 
 #file-display {
     position: absolute;
     overflow-y: scroll;
-    top: 0px;
+    top: 5px;
     right: 0px;
     border: 2px solid var(--focus);
-    height: 92vh;
-    width: 50vw;
-    margin-top: 56px; /* have to add this back because ? */
+    height: calc(100vh - 56px - 20px); /* gives it a bit of margin at the bottom, the 56px is the header */
+    width: 50%;
 }
 
 #search-bar {
@@ -183,6 +187,7 @@ input[type=text], input[type=username], input[type=password] {
 }
 
 .file-table {
+    table-layout: fixed; /* UNLUCKY but what i have to do for the sexy ellipses */
     border-collapse: collapse;
     border-spacing: 0;
     width: 100%;
@@ -194,6 +199,7 @@ input[type=text], input[type=username], input[type=password] {
     overflow: hidden;
     padding: 10px 5px;
     word-break: normal;
+    cursor: pointer;
 } .file-table td {
     border-bottom: 1px solid var(--unfocus);
     border-right: 1px solid var(--unfocus);
@@ -207,6 +213,18 @@ input[type=text], input[type=username], input[type=password] {
     background-color: rgba(226, 204, 158, 0.15);
     text-align: left;
     vertical-align: top
+}
+
+#table-fill {
+    max-height: calc(100vh - 56px - 20px - 50px - 44.5px);
+    /* first part is the file display height, then minus the search bar and top bar height. the last one i'm not completely sure about working 100% */
+    overflow-y: scroll;
+}
+
+.table-sort-arrow {
+    display: none;
+    font-size: 12px;
+    color:rgba(232, 198, 148, 0.25);
 }
 
 #alert-area {
@@ -239,4 +257,13 @@ input[type=text], input[type=username], input[type=password] {
     5% { opacity: 1; }
     80% { opacity: 1; }
 	100% { opacity: 0; }
+}
+
+.filename {
+    display: block;
+    margin: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    height: 24px; /* table is 24px tall :3 */
 }

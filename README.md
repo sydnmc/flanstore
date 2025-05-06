@@ -14,9 +14,9 @@ similar to s-ul.eu, each user has their own subdomain and can drag/drop or uploa
 
 the backend server requires `express, multer, and cors` to be installed (`npm install express multer cors`) to function properly.
 
-oh also, i think you might need to create a `/files` folder for the backend to properly create everything for each user, but yeah >w<
+you'll also need to create a blank `userinfo.json`, as well as a `/files` folder for the backend to properly create everything for each user, but yeah >w<
 
 that's it, pretty much :3
 
 
-> entirely made by lilac / yuiyamu :3~
+> entirely made by lilac / yuiyamu~ :3

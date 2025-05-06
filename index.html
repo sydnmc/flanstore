@@ -76,17 +76,17 @@
         <p class="white-click-text" id="back-to-login">click here to go back to the login screen~</p>
       </div>
     </div>
-    <i class="fa fa-gear settings" id="settings"></i>
+    <i class="settings fa fa-gear" id="settings" style="font-size: 20px;"></i>
     <div id="settings-section">
       <div id="settings-text">
         <input type="checkbox" id="date-check" name="date-check" checked />
         <label for="date-check">use MM/DD/YYYY date format</label>
       </div>
-      <i class="fa fa-gear settings" id="new-settings"></i>
+      <i class="fa fa-gear settings" id="new-settings" style="font-size: 20px;"></i>
     </div>
     <div id="below-header">
       <section id="left-content">
-        <div>
+        <div id="flanstore-info">
           <h1>flanstore 🍮📦</h1>
           <p>drop your files anywhere on the page >w<</p>
           <p>you can also click the button below to do so :3</p>
@@ -99,11 +99,17 @@
           <input id="search-input" type="text"/>
         </div>
         <table class="file-table">
+          <colgroup>
+            <col style="width: 52%;">
+            <col style="width: 13%;">
+            <col style="width: 10%;">
+            <col>
+          </colgroup>
           <tr>
-            <th>file name</th>
-            <th>date added</th>
-            <th>size</th>
-            <th style="border-right: none;">url</th>
+            <th id="file-name">file name <span class="table-sort-arrow" id="file-name-arrow">▲</span></th>
+            <th id="date-added">date added <span class="table-sort-arrow" id="date-added-arrow">▲</span></th>
+            <th id="size">size <span class="table-sort-arrow" id="size-arrow">▲</span></th>
+            <th id="file-url" style="border-right: none;">url <span class="table-sort-arrow" id="file-url-arrow">▲</span></th>
           </tr>
         <tbody id="table-fill"></tbody>
         </table>

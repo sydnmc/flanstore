@@ -16,7 +16,7 @@ var userInfo = JSON.parse(fs.readFileSync('./userinfo.json', {encoding: 'utf8'})
 userInfo.forEach(user => {
     let userPathExists = fs.existsSync(`./files/${user.subdomain}/filemap.json`);
     if (!userPathExists) {
-        console.log(`./files/${user.subdomain}/filemap.json`);
+        console.log(`created directory for ${user.subdomain} at ./files/${user.subdomain}/filemap.json >w<`);
         fs.mkdirSync(`./files/${user.subdomain}`); //first, we have to make the directory here
         fs.writeFileSync(`./files/${user.subdomain}/filemap.json`, "[]", 'utf8', (err) => {
             if (err) {
@@ -26,6 +26,7 @@ userInfo.forEach(user => {
     }
     app.use(express.static(`./files/${user.subdomain}`)); //each user needs their own root function like this :3
 });
+app.use(express.static(`./api`)); //also serves everything in the api folder, which for now is just user pfps :3
 
 app.listen(port, () => {
     console.log(`flanstore server - port ${port}~`);
@@ -64,6 +65,27 @@ function updateMapFile(subdomain, userFileMap) {
     });
 }
 
+function updateUserData() {
+    fs.writeFile(`./userinfo.json`, JSON.stringify(userInfo), 'utf8', (err) => {
+        if (err) {
+          console.error(`there was an error writing to the userInfo file:`, err);
+          return;
+        }
+    });
+}
+
+function findUserIndex(username) {
+    let searchUser = 0;
+    let foundUser = false;
+    while (searchUser < userInfo.length && !foundUser) { //just so we can cycle through the users, and find which one to apply our changes to :3
+        if (userInfo[searchUser].subdomain == username) {
+            foundUser = true;
+        }
+        searchUser++;
+    }
+    return searchUser-1;
+}
+
 function verifyApiRequest(subdomain, apiKey) {
     let isValid = false;
     userInfo.forEach(user => {
@@ -99,8 +121,8 @@ function fileSizeString(size) {
 
 app.post('/upload', upload.single('file'), async (req, res) => { //file gets saved here, with upload.single
     let user = req.headers["x-user"];
-    let currentDay = new Date();
-    currentDay = `${currentDay.getUTCMonth()+1}/${currentDay.getUTCDate()}/${currentDay.getUTCFullYear()}`; //uses MM/DD/YYYY, but there should be a setting to change this~
+    let currentTime = new Date();
+    let fileAddedDate = `${currentTime.getUTCMonth()+1}/${currentTime.getUTCDate()}/${currentTime.getUTCFullYear()}`; //uses MM/DD/YYYY, but there should be a setting to change this~
     //once we have a valid upload, then we want to start messing with the fileMap~
     let fileMap = JSON.parse(fs.readFileSync(`./files/${user}/filemap.json`, {encoding: 'utf8'}));
     let stats = fs.statSync(`./files/${user}/${lastFileName}`); //since we've saved the file already, stats are here!! :D
@@ -108,8 +130,10 @@ app.post('/upload', upload.single('file'), async (req, res) => { //file gets sav
     fileMap.push({ 
         filename: originalFileName, 
         serverPath: lastFileName, 
-        dateAdded: currentDay, 
-        fileSize: fileSize }); //finally, we can save everything~
+        dateAdded: fileAddedDate, 
+        fileSize: fileSize,
+        rawFileSize: stats.size,
+        timestampAdded: Date.parse(currentTime)}); //finally, we can save everything~
     updateMapFile(user, fileMap);
     
     res.send(`https://${user}.yuru.ca/${fileMap[fileMap.length-1].serverPath}`); //sends the url back, since sharex copies the response to clipboard~
@@ -135,18 +159,32 @@ app.get('/prevFilename', (req, res) => {
     res.send({"name":lastFileName});
 });
 
+app.get('/userPfp', (req, res) => {
+    let user = req.query.user;
+    let userIndex = findUserIndex(user);
+    res.send({"profileLink":userInfo[userIndex].userPfp});
+});
+
 app.get('/readFilemap', (req, res) => {
     let apiKey = req.headers["authorization"];
     let user = req.headers["x-user"];
     let isValid = verifyApiRequest(user, apiKey);
     if (isValid) {
+        let userIndex = findUserIndex(user);
         let fileMap = JSON.parse(fs.readFileSync(`./files/${user}/filemap.json`, {encoding: 'utf8'}));
+        if (!userInfo[userIndex].dateFormat) {
+            fileMap.forEach(file => {
+                file.dateAdded = `${file.dateAdded.split('/')[1]}/${file.dateAdded.split('/')[0]}/${file.dateAdded.split('/')[2]}`; //makes the date anne compliant. anne certification type shit
+            });
+        }
         res.send(fileMap);
+    } else {
+        res.send({"response":"could not verify api key >_<"});
     }
 });
 
 app.get('/', (req, res) => {
-    res.redirect('https://flanstore.yuru.ca');
+    res.redirect('https://flanstore.yuru.ca'); //redirects anyone who just goes to a base url :3 i think this is neat~
 });
 
 app.post('/login', (req, res) => {
@@ -190,4 +228,23 @@ app.post('/accountapply', (req, res) => {
     //paws at you
 
     res.send({"response":"applied for account :3"})
+});
+
+app.post('/changeSettings', async (req, res) => {
+    let apiKey = req.headers["authorization"];
+    let user = req.headers["x-user"];
+    let isValid = verifyApiRequest(user, apiKey);
+    if (isValid) {
+        let userIndex = findUserIndex(user);
+        let settingToChange = req.body;
+        switch (settingToChange.changeSetting) { //for more settings later!! :D
+            case "dateFormat": //true is MM/DD/YYYY, false is DD/MM/YYYY
+                userInfo[userIndex].dateFormat = settingToChange.dateFormat;
+                break;
+            }
+        updateUserData();
+        res.send({"response":"changed successfully~ :3"});
+    } else {
+        res.send({"response":"could not verify api key >_<"});
+    }
 });

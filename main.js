@@ -1,4 +1,4 @@
-const endpoint = 'https://anne.yuru.ca'; //for whatever reason, this Just Works for right now and api.flanstore doesn't. i blame cloudflare
+const endpoint = 'http://localhost:1402'; //for whatever reason, this Just Works for right now and api.flanstore doesn't. i blame cloudflare
 //subetecloudflarenoseidesu
 
 //logic to control login functionality, we check if we're logged in below :3
@@ -57,6 +57,34 @@ async function applyForAccount() {
   }
 }
 
+function sortTable(table, type) {
+  if (descending) {
+    switch (type) {
+      case "text":
+        table.sort((a, b) => a.filename.localeCompare(b.filename));
+        break;
+      case "date":
+        table.sort((a, b) => a.timestampAdded - b.timestampAdded);
+        break;
+      case "size":
+        table.sort((a, b) => a.rawFileSize - b.rawFileSize);
+        break;
+    }
+  } else {
+    switch (type) {
+      case "text":
+        table.sort((a, b) => b.filename.localeCompare(a.filename));
+        break;
+      case "date":
+        table.sort((a, b) => b.timestampAdded - a.timestampAdded);
+        break;
+      case "size":
+        table.sort((a, b) => b.rawFileSize - a.rawFileSize);
+        break;
+    }
+  }
+  return table;
+}
 
 var loginArea = document.getElementById('log-in-area');
 var accountApplyArea = document.getElementById('account-apply-area');
@@ -93,8 +121,6 @@ if (!localStorage.getItem("key")) { //if we don't have a key yet, then we wanna 
   });
 
   var fileMap;
-  var americaYa = true; //used to determine date format, defaults to MM/DD/YYYY
-  
   async function fillTable(isSearchMap, searchMap) {
     let tableFileMap
     if (!isSearchMap) {
@@ -118,25 +144,23 @@ if (!localStorage.getItem("key")) { //if we don't have a key yet, then we wanna 
     let tableHtml = '';
     for (let i = 0; i < tableFileMap.length; i++) {
       let tableClass;
-      let fileDate = tableFileMap[i].dateAdded;
       if (i%2 == 0) {
         tableClass = 'table-element-odd';
       } else {
         tableClass = 'table-element-even';
       }
-      if (!americaYa) {
-        fileDate = `${fileDate.split('/')[1]}/${fileDate.split('/')[0]}/${fileDate.split('/')[2]}`; //makes the date anne compliant. anne certification type shit
-      }
 
       tableHtml = tableHtml+`<tr>
-              <td class="${tableClass}">${tableFileMap[i].filename}</td>
-              <td class="${tableClass}">${fileDate}</td>
+              <td class="${tableClass}">
+                  <span class="filename">${tableFileMap[i].filename}</span>
+              </td>
+              <td class="${tableClass}">${tableFileMap[i].dateAdded}</td>
               <td class="${tableClass}">${tableFileMap[i].fileSize}</td>
               <td style="border-right: none; display: flex; justify-content: space-between" class="${tableClass}">
                 <a href=http://${currentDomain}/${tableFileMap[i].serverPath}>${tableFileMap[i].serverPath}</a>
                 <div>
-                  <i class="fa fa-copy" id="copy-${i}" style="margin-right: 5px; cursor: pointer;"></i>
-                  <i class="fa fa-trash-o" id="trash-can-${i}" style="margin-right: 5px; cursor: pointer;"></i>
+                  <i class="fa fa-copy" id="copy-${i}" style="margin-right: 2px; cursor: pointer;"></i>
+                  <i class="fa fa-trash-o" id="trash-can-${i}" style="margin-right: 2px; cursor: pointer;"></i>
                 </div>
               </td>
             </tr>`
@@ -160,7 +184,7 @@ if (!localStorage.getItem("key")) { //if we don't have a key yet, then we wanna 
 
       document.getElementById('copy-'+i).addEventListener("click", async() => {
         navigator.clipboard.writeText(`https://${currentDomain}/${tableFileMap[i].serverPath}`); //copies the whole link to clipboard
-        document.getElementById('alert-area').innerHTML = `<div class="copy-alert"><h3>copied <a href="https://${currentDomain}/${tableFileMap[i].serverPath}">https://${currentDomain}/${tableFileMap[i].serverPath}</a> to clipboard!</h3></div>`;
+        document.getElementById('alert-area').innerHTML = `<div class="copy-alert"><h3>copied <a href="https://${currentDomain}/${tableFileMap[i].serverPath}">https://${currentDomain}/${tableFileMap[i].serverPath}</a> to clipboard! >w<</h3></div>`;
       });
     }
   }
@@ -173,10 +197,6 @@ if (!localStorage.getItem("key")) { //if we don't have a key yet, then we wanna 
     localStorage.clear(); //clears local storage, wiping the user and key :3
     location.reload(); //get reloaded idiot
   });
-  
-  var userPfp = document.getElementById('user-pfp');
-  userPfp.src = `${localStorage.getItem("user")}.jpg`; //only works with jpegs ofc
-  userPfp.alt = `${localStorage.getItem("user")}'s pfp`
 
   var searchBar = document.getElementById('search-input');
   searchBar.addEventListener("keydown", () => {
@@ -202,10 +222,45 @@ if (!localStorage.getItem("key")) { //if we don't have a key yet, then we wanna 
     settingsOverlay.style.display = "none"; //just closes out of the settings menu :3
     settingsIcon.style.display = "block"; //don't forget to bring the old guy back~
   });
-  dateCheckBox.addEventListener("change", () => {
-    americaYa = dateCheckBox.checked;
+  dateCheckBox.addEventListener("change", async() => {
+    console.log(dateCheckBox.checked);
+    await fetch(`${endpoint}/changeSettings`, { //first, let's change the settings - then we can refil the table with that function :3
+      method: 'POST',
+      headers: {
+        'Authorization': localStorage.getItem("key"),
+        'X-User': localStorage.getItem("user"),
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ "changeSetting":"dateFormat", "dateFormat":dateCheckBox.checked }) //will change this for each setting later, but for now we just have this~
+    });
     fillTable(false); //if we have something searched and we check this box, won't work for now, but oh well :p
   });
+
+  let tableElements = [ "file-name", "date-added", "size", "file-url" ];
+  let sortCategories = [ "text", "date", "size", "text" ];
+  var descending = true;
+  for (let i = 0; i < tableElements.length; i++) {
+    let curElement = document.getElementById(tableElements[i]);
+    let arrow = document.getElementById(`${tableElements[i]}-arrow`);
+    curElement.addEventListener("mouseover", () => {
+      arrow.style.display = "contents";
+    });
+    curElement.addEventListener("mouseleave", () => {
+      arrow.style.display = "none";
+    });
+    
+    curElement.addEventListener("click", () => { 
+      if (descending) {
+        arrow.textContent = "▼";
+        descending = false; 
+      } else {
+        arrow.textContent = "▲";
+        descending = true;
+      }
+      let sortedTable = sortTable(fileMap, sortCategories[i]); 
+      fillTable(true, sortedTable);
+    });
+  }
   
   /* preventing default drop actions */
   window.addEventListener('dragover', e => e.preventDefault());
@@ -251,6 +306,12 @@ if (!localStorage.getItem("key")) { //if we don't have a key yet, then we wanna 
   });
   
   (async () => {
+    var userPfp = document.getElementById('user-pfp');
+    var pfpLink = await fetch(`${endpoint}/userPfp?user=${localStorage.getItem("user")}`);
+    pfpLink = await pfpLink.json();
+    userPfp.src = pfpLink.profileLink;
+    userPfp.alt = `${localStorage.getItem("user")}'s pfp`;
+
     fillTable(false);
   })();
 }
