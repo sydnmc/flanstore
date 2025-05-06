@@ -1,5 +1,4 @@
-const endpoint = 'http://localhost:1402'; //for whatever reason, this Just Works for right now and api.flanstore doesn't. i blame cloudflare
-//subetecloudflarenoseidesu
+const endpoint = 'https://api.flanstore.yuru.ca';
 
 //logic to control login functionality, we check if we're logged in below :3
 var loginButton = document.getElementById('login-button');
