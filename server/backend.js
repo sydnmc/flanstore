@@ -45,8 +45,13 @@ const storage = multer.diskStorage({
         if (isValid) {
           let userIndex = findUserIndex(user);
           if (userInfo[userIndex].isPrivileged) { //requires extra special privilege :O
-            if (userInfo[userIndex].filePath) { //checks if we even have a file path saved, because we may not
-              saveLocation = userInfo[userIndex].filePath;
+            let filePath = userInfo[userIndex].filePath;
+            if (filePath) { //checks if we even have a file path saved, because we may not
+              if (filePath.includes('~')) { //will sometimes have tilda hanging around
+                saveLocation = filePath.replace('~', '/home/sydney');
+              } else {
+                saveLocation = filePath;
+              }
             }
           }
         }
@@ -70,7 +75,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 function updateMapFile(subdomain, userFileMap) {
-    fs.writeFile(`./files/${subdomain}/filemap.json`, JSON.stringify(userFileMap), 'utf8', (err) => {
+    fs.writeFile(`./files/${subdomain}/filemap.json`, JSON.stringify(userFileMap, null, 4), 'utf8', (err) => {
         if (err) {
           console.error(`there was an error writing to the filemap for ${subdomain}:`, err);
           return;
@@ -79,7 +84,7 @@ function updateMapFile(subdomain, userFileMap) {
 }
 
 function updateUserData() {
-    fs.writeFile(`./userinfo.json`, JSON.stringify(userInfo), 'utf8', (err) => {
+    fs.writeFile(`./userinfo.json`, JSON.stringify(userInfo, null, 4), 'utf8', (err) => {
         if (err) {
           console.error(`there was an error writing to the userInfo file:`, err);
           return;
@@ -134,7 +139,7 @@ function fileSizeString(size) {
 
 app.post('/upload', upload.single('file'), async (req, res) => { //file gets saved here, with upload.single
     let user = req.headers["x-user"];
-  if (userInfo[findUserIndex(user)].filePath === `~/Server/flanstore/server/files/${user}/` || (!userInfo[findUserIndex(user)].filePath)) {
+  if (userInfo[findUserIndex(user)].filePath === `/home/sydney/Server/flanstore/files/${user}/` || (!userInfo[findUserIndex(user)].filePath)) {
     //if we're not using the normal file path, don't bother adding it to the file map :3
     //this checks both for the default file map, as well as if it's not defined
 
@@ -275,7 +280,7 @@ app.get('/readPath', async (req, res) => {
     if (isValid) {
         let userIndex = findUserIndex(user);
         if (!userInfo[userIndex].filePath) {
-          userInfo[userIndex].filePath = `~/Server/flanstore/server/files/${user}/`;
+          userInfo[userIndex].filePath = `/home/sydney/Server/flanstore/files/${user}/`;
           updateUserData();
         }
       res.send({ "path": userInfo[userIndex].filePath });
@@ -291,7 +296,7 @@ app.post('/ls', async (req, res) => {
     if (userInfo[userIndex].isPrivileged) { //because these require extra permissions to do, we have to check for that too!! :3
       let searchContent = req.body.searchContent;
       if (searchContent === "default") {
-        searchContent = `~/Server/flanstore/server/files/${user}/`;
+        searchContent = `/home/sydney/Server/flanstore/files/${user}/`;
       }
       userInfo[userIndex].filePath = searchContent;
       updateUserData(); //whenever we read the user path again, it'll be updated :3
