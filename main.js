@@ -1,4 +1,4 @@
-const endpoint = 'https://anne.yuru.ca'; //for some reason, i cannot touch this. i want to make it api.flanstore, but anne is the only thing that works.
+const endpoint = "https://anne.yuru.ca"; //for some reason, i cannot touch this. i want to make it api.flanstore, but anne is the only thing that works.
 //could it be cloudflare fuckery? who knows. all i know is that this works, and other things don't :3
 //once again,
 //subetecloudflarenoseidesu
@@ -19,9 +19,9 @@ async function attemptLogin() {
   passwordAttempt = await passwordAttempt.json();
 
   if (passwordAttempt.loginStatus == true) {
-      localStorage.setItem("key", passwordAttempt.key); //i fucking love cross site scripting ^.^
-      localStorage.setItem("user", subdomainInput);
-      window.location.href = "./index.html"; //goes to the main page, now with your key stored :3
+    localStorage.setItem("key", passwordAttempt.key); //i fucking love cross site scripting ^.^
+    localStorage.setItem("user", subdomainInput);
+    location.reload();
   } else {
       try {
           document.getElementById("login-fail").textContent = "incorrect login, please try again >_<;;"; //if the failed login text already exists, let's not write over it~
@@ -30,12 +30,14 @@ async function attemptLogin() {
       }
   }
 }
-loginButton.addEventListener("click", async() => { await attemptLogin(); });
-document.getElementById('password').addEventListener("keypress", async function (event) {
-  if (event.key === 'Enter') {
-    await attemptLogin();
-  }
+loginButton.addEventListener("click", async () => {
+  await attemptLogin();
 });
+document.getElementById("password").addEventListener("keypress", async function (event) {
+    if (event.key === "Enter") {
+      await attemptLogin();
+    }
+  });
 
 let appliedForAccount = false;
 let applyButton = document.getElementById('apply-button');
@@ -44,7 +46,7 @@ async function applyForAccount() {
     let subdomainInput = document.getElementById('application-subdomain').value;
     let passwordInput = document.getElementById('application-password').value;
     let discord = document.getElementById('application-discord').value;
-  
+
     let response = await fetch(`${endpoint}/accountapply`, {
       method: 'POST',
       headers: {
@@ -53,7 +55,7 @@ async function applyForAccount() {
       body: JSON.stringify({ subdomain: subdomainInput, password: passwordInput, discord: discord }),
     });
     response = await response.json();
-  
+
     applyButton.insertAdjacentHTML("afterend", `<br><span>${response.response}</span>`);
     appliedForAccount = true; //if you've already applied, you can't spam the button~
   }
@@ -97,7 +99,7 @@ document.getElementById('account-apply-text').addEventListener("click", () => {
 document.getElementById('back-to-login').addEventListener("click", () => {
   loginArea.style.display = "grid";
   accountApplyArea.style.display = "none";
-})
+});
 
 applyButton.addEventListener("click", async() => { await applyForAccount(); });
 document.getElementById('application-discord').addEventListener("keypress", async function (event) {
@@ -111,20 +113,18 @@ if (!localStorage.getItem("key")) { //if we don't have a key yet, then we wanna 
 } else { //if we do have a key, then everything else can run!!
   const currentDomain = `${localStorage.getItem("user")}.yuru.ca`;
   document.getElementById('page-url').innerText = currentDomain;
-  
-  //document.getElementById('url-area').insertAdjacentHTML('beforeend', `<span>uploaded file ${e.dataTransfer.files[0].name} to <a href=https://${currentDomain}/${fileName}>https://${currentDomain}/${fileName}</a></span><br>`);
-  var uploadArea = document.getElementById('upload-area');
-  
+
+  let uploadArea = document.getElementById("upload-area");
   document.getElementById('cancel-upload').addEventListener("click", () => {
-    uploadArea.style.display = 'none';
+    uploadArea.style.display = "none";
   });
   document.getElementById('upload-button').addEventListener("click", () => {
-    uploadArea.style.display = 'flex';
+    uploadArea.style.display = "flex";
   });
 
-  var fileMap;
+  let fileMap;
   async function fillTable(isSearchMap, searchMap) {
-    let tableFileMap
+    let tableFileMap;
     if (!isSearchMap) {
       try {
         fileMap = await fetch(`${endpoint}/readFilemap`, {
@@ -142,7 +142,7 @@ if (!localStorage.getItem("key")) { //if we don't have a key yet, then we wanna 
     } else {
       tableFileMap = searchMap;
     }
-    
+
     let tableHtml = '';
     for (let i = 0; i < tableFileMap.length; i++) {
       let tableClass;
@@ -159,17 +159,17 @@ if (!localStorage.getItem("key")) { //if we don't have a key yet, then we wanna 
               <td class="${tableClass}">${tableFileMap[i].dateAdded}</td>
               <td class="${tableClass}">${tableFileMap[i].fileSize}</td>
               <td style="border-right: none; display: flex; justify-content: space-between" class="${tableClass}">
-                <a href=http://${currentDomain}/${tableFileMap[i].serverPath}>${tableFileMap[i].serverPath}</a>
+                <a href=https://${currentDomain}/${tableFileMap[i].serverPath}>${tableFileMap[i].serverPath}</a>
                 <div>
                   <i class="fa fa-copy" id="copy-${i}" style="margin-right: 2px; cursor: pointer;"></i>
                   <i class="fa fa-trash-o" id="trash-can-${i}" style="margin-right: 2px; cursor: pointer;"></i>
                 </div>
               </td>
-            </tr>`
+            </tr>`;
     }
     document.getElementById('table-fill').innerHTML = '';
     document.getElementById('table-fill').innerHTML = tableHtml;
-  
+
     for (let i = 0; i < tableFileMap.length; i++) {
       document.getElementById('trash-can-'+i).addEventListener("click", async() => {
         await fetch(`${endpoint}/deleteFile`, {
@@ -190,17 +190,17 @@ if (!localStorage.getItem("key")) { //if we don't have a key yet, then we wanna 
       });
     }
   }
-  
+
   window.addEventListener('dragover', () => {
     uploadArea.style.display = 'flex';
   });
-  
+
   document.getElementById('logout').addEventListener("click", () => {
     localStorage.clear(); //clears local storage, wiping the user and key :3
     location.reload(); //get reloaded idiot
   });
 
-  var searchBar = document.getElementById('search-input');
+  let searchBar = document.getElementById("search-input");
   searchBar.addEventListener("keydown", () => {
     let searchQuery = searchBar.value;
     let searchFileMap = [];
@@ -212,10 +212,10 @@ if (!localStorage.getItem("key")) { //if we don't have a key yet, then we wanna 
     fillTable(true, searchFileMap); //fills the table, but uses this temp filemap
   });
 
-  var settingsIcon = document.getElementById('settings');
-  var newSettingsIcon = document.getElementById('new-settings');
-  var settingsOverlay = document.getElementById('settings-section');
-  var dateCheckBox = document.getElementById('date-check');
+  let settingsIcon = document.getElementById("settings");
+  let newSettingsIcon = document.getElementById("new-settings");
+  let settingsOverlay = document.getElementById("settings-section");
+  let dateCheckBox = document.getElementById("date-check");
   settingsIcon.addEventListener("click", () => {
     settingsIcon.style.display = "none"; //getting rid of the original settings icon in the background (unfortunately this is the best way i thought to do this >.<)
     settingsOverlay.style.display = "block";
@@ -238,9 +238,9 @@ if (!localStorage.getItem("key")) { //if we don't have a key yet, then we wanna 
     fillTable(false); //if we have something searched and we check this box, won't work for now, but oh well :p
   });
 
-  let tableElements = [ "file-name", "date-added", "size", "file-url" ];
-  let sortCategories = [ "text", "date", "size", "text" ];
-  var descending = true;
+  let tableElements = ["file-name", "date-added", "size", "file-url"];
+  let sortCategories = ["text", "date", "size", "text"];
+  var descending = true; //only works as a var :p
   for (let i = 0; i < tableElements.length; i++) {
     let curElement = document.getElementById(tableElements[i]);
     let arrow = document.getElementById(`${tableElements[i]}-arrow`);
@@ -250,20 +250,88 @@ if (!localStorage.getItem("key")) { //if we don't have a key yet, then we wanna 
     curElement.addEventListener("mouseleave", () => {
       arrow.style.display = "none";
     });
-    
-    curElement.addEventListener("click", () => { 
+
+    curElement.addEventListener("click", () => {
       if (descending) {
         arrow.textContent = "▼";
-        descending = false; 
+        descending = false;
       } else {
         arrow.textContent = "▲";
         descending = true;
       }
-      let sortedTable = sortTable(fileMap, sortCategories[i]); 
+      let sortedTable = sortTable(fileMap, sortCategories[i]);
       fillTable(true, sortedTable);
     });
   }
-  
+
+  async function getCurrentPath() {
+    let pathInfo = await fetch(`${endpoint}/readPath`, {
+      method: 'GET',
+      headers: {
+        Authorization: localStorage.getItem('key'),
+        "X-User": localStorage.getItem('user'),
+      },
+    });
+    return await pathInfo.json();
+  }
+
+  let destinationBox = document.getElementById("destination-select");
+  let destinationSearchBar = document.getElementById("destination-area");
+  document.getElementById("upload-selection").addEventListener("click", async () => {
+      destinationBox.style.display = "flex";
+      let path = await getCurrentPath();
+      destinationSearchBar.value = path.path; //path.path is a bit silly now that i think about it >_<;;
+      console.log(path);
+  });
+  destinationSearchBar.addEventListener("keypress", async function (event) {
+    if (event.key === "Enter") {
+      let directoryContents = await fetch(`${endpoint}/ls`, {
+        method: 'POST',
+        headers: {
+          'Authorization': localStorage.getItem("key"),
+          'X-User': localStorage.getItem("user"),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ "searchContent":destinationSearchBar.value }),
+      });
+      directoryContents = await directoryContents.json();
+      let lsContainer = document.getElementById('ls-output');
+      let lsContents = '';
+      if (directoryContents.length == undefined) { //if we get a directory that doesn't exist, not just an empty one :3
+        lsContents = directoryContents.response;
+      } else if (directoryContents.length == 0) { //if our directory is actually empty
+        lsContents = 'no additional directories o.o';
+      } else {
+        lsContents = `<div class="ls-column">`;
+        let fileCount = 0;
+        directoryContents.forEach(file => {
+          if (fileCount % 4 == 0) { //every 4 files, i want to create a new line :3
+            lsContents = lsContents + `</div><div class="ls-column">`;
+          }
+          lsContents = lsContents + `<span>${file}</span><br>`;
+          fileCount++;
+        });
+      }
+      lsContainer.innerHTML = lsContents;
+    }
+  });
+  document.getElementById('set-default-dest').addEventListener("click", async() => {
+    await fetch(`${endpoint}/ls`, {
+      method: 'POST',
+      headers: {
+        'Authorization': localStorage.getItem("key"),
+        'X-User': localStorage.getItem("user"),
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ "searchContent":"default" }),
+    });
+    destinationBox.style.display = "none"; //also closes out of the container afterwards
+  });
+
+  document.getElementById("close-destination").addEventListener("click", () => {
+    destinationBox.style.display = "none";
+  });
+
   /* preventing default drop actions */
   window.addEventListener('dragover', e => e.preventDefault());
   window.addEventListener('drop', e => e.preventDefault());
@@ -273,13 +341,13 @@ if (!localStorage.getItem("key")) { //if we don't have a key yet, then we wanna 
         e.stopPropagation();
       });
   });
-  
+
   //handles drag/drop uploads, still reloads for now but i'll fix that later~
   uploadArea.addEventListener("drop", async (e) => {
       let file = e.dataTransfer.files[0];
       let imageForm = new FormData();
       imageForm.append('file', file);
-  
+
       await fetch(`${endpoint}/upload`, {
         method: 'POST',
         headers: {
@@ -290,7 +358,7 @@ if (!localStorage.getItem("key")) { //if we don't have a key yet, then we wanna 
       });
       location.reload(); //forcefully reloads eheehe
   });
-  
+
   //handles uploads with the file picker (formSubmit), reloads no matter what happens
   document.getElementById('file-submit-form').addEventListener('submit', async (e) => {
     let image = new FormData(e.target);
@@ -302,17 +370,28 @@ if (!localStorage.getItem("key")) { //if we don't have a key yet, then we wanna 
       },
       body: image,
     });
-    /* page will reload after this, due to how forms and html and browser shenanagins interact. 
+    /* page will reload after this, due to how forms and html and browser shenanagins interact.
     * i tried everything to try to prevent this, but it seems like it's MURI */
     location.reload(); //actually nvm. it doesn't reload in prod, but i actually do like this functionality :3
   });
-  
+
   (async () => {
     var userPfp = document.getElementById('user-pfp');
     var pfpLink = await fetch(`${endpoint}/userPfp?user=${localStorage.getItem("user")}`);
     pfpLink = await pfpLink.json();
     userPfp.src = pfpLink.profileLink;
     userPfp.alt = `${localStorage.getItem("user")}'s pfp`;
+
+    let isPrivileged = await fetch(`${endpoint}/privilegeCheck`, {
+      method: 'GET',
+      headers: {
+        'X-User': localStorage.getItem("user"),
+      },
+    });
+    isPrivileged = await isPrivileged.json();
+    if (isPrivileged.response) {
+      document.getElementById('upload-selection').style.display = "block";
+    }
 
     fillTable(false);
   })();

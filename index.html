@@ -26,7 +26,7 @@
         <img id="user-pfp"></img>
       </div>
     </header>
-    <div id="upload-area">
+    <div id="upload-area" class="screen-overlay">
       <div id="upload-content">
         <span>drag your file :3</span>
         <div class="upload-divider"></div>
@@ -35,12 +35,12 @@
           <input type="file" name="file"/>
           <button>upload~ :3</button>
           <p>note: uploading this way will always cause the page to reload >.<</p>
-        </form>        
+        </form>
         <div class="upload-divider"></div>
         <button id="cancel-upload">cancel</button>
       </div>
     </div>
-    <div id="not-logged-in">
+    <div id="not-logged-in" class="screen-overlay">
       <div id="log-in-area">
         <h1>you're not currently logged in >_<;;</h1>
         <p>enter your subdomain and password below:</p>
@@ -77,7 +77,7 @@
       </div>
     </div>
     <i class="settings fa fa-gear" id="settings" style="font-size: 20px;"></i>
-    <div id="settings-section">
+    <div id="settings-section" class="screen-overlay">
       <div id="settings-text">
         <input type="checkbox" id="date-check" name="date-check" checked />
         <label for="date-check">use MM/DD/YYYY date format</label>
@@ -91,17 +91,28 @@
           <p>drop your files anywhere on the page >w<</p>
           <p>you can also click the button below to do so :3</p>
           <button id="upload-button">upload~ :3</button>
+          <p id="upload-selection" class="white-click-text" style="display: none;">change destination :O</p>
+        </div>
+        <div id="destination-select">
+          <h3 id="select-header">destination:</h3>
+          <div id="destination-search-bar">
+            <i class="fa fa-search" style="font-size: 14px; color: white; margin-left: 5px;"></i>
+            <input class="search-input" id="destination-area" type="text"/>
+            <span id="set-default-dest">set default</span>
+          </div>
+          <div id="ls-output"></div>
+          <span id="close-destination">×</span>
         </div>
       </section>
       <section id="file-display">
         <div id="search-bar">
           <i class="fa fa-search" style="font-size: 22px; color: white; margin-left: 5px;"></i>
-          <input id="search-input" type="text"/>
+          <input class="search-input" id="search-input" type="text"/>
         </div>
         <table class="file-table">
           <colgroup>
-            <col style="width: 52%;">
-            <col style="width: 13%;">
+            <col style="width: 50%;">
+            <col style="width: 15%;">
             <col style="width: 10%;">
             <col>
           </colgroup>

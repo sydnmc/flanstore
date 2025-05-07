@@ -36,8 +36,21 @@ var lastFileName = '';
 var originalFileName = '';
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        let user = req.headers["x-user"]; //don't need to verify all of this, because the verification comes when we save it later
-        cb(null, `./files/${user}`); //puts the files in here :3
+        //for saving to other locations, we need to verify user permissions :3
+        let apiKey = req.headers["authorization"];
+        let user = req.headers["x-user"];
+        let isValid = verifyApiRequest(user, apiKey);
+        let saveLocation = `./files/${user}`; //default save location
+
+        if (isValid) {
+          let userIndex = findUserIndex(user);
+          if (userInfo[userIndex].isPrivileged) { //requires extra special privilege :O
+            if (userInfo[userIndex].filePath) { //checks if we even have a file path saved, because we may not
+              saveLocation = userInfo[userIndex].filePath;
+            }
+          }
+        }
+        cb(null, saveLocation);
     },
     filename: (req, file, cb) => {
         //first, checking if we have permission to upload the file
@@ -121,22 +134,27 @@ function fileSizeString(size) {
 
 app.post('/upload', upload.single('file'), async (req, res) => { //file gets saved here, with upload.single
     let user = req.headers["x-user"];
+  if (userInfo[findUserIndex(user)].filePath === `~/Server/flanstore/server/files/${user}/` || (!userInfo[findUserIndex(user)].filePath)) {
+    //if we're not using the normal file path, don't bother adding it to the file map :3
+    //this checks both for the default file map, as well as if it's not defined
+
     let currentTime = new Date();
-    let fileAddedDate = `${currentTime.getUTCMonth()+1}/${currentTime.getUTCDate()}/${currentTime.getUTCFullYear()}`; //uses MM/DD/YYYY, but there should be a setting to change this~
+    let fileAddedDate = `${currentTime.getUTCMonth()+1}/${currentTime.getUTCDate()}/${currentTime.getUTCFullYear()}`; //uses MM/DD/YYYY, but this gets changed later with a setting~
     //once we have a valid upload, then we want to start messing with the fileMap~
     let fileMap = JSON.parse(fs.readFileSync(`./files/${user}/filemap.json`, {encoding: 'utf8'}));
     let stats = fs.statSync(`./files/${user}/${lastFileName}`); //since we've saved the file already, stats are here!! :D
     let fileSize = fileSizeString(stats.size);
-    fileMap.push({ 
-        filename: originalFileName, 
-        serverPath: lastFileName, 
-        dateAdded: fileAddedDate, 
+    fileMap.push({
+        filename: originalFileName,
+        serverPath: lastFileName,
+        dateAdded: fileAddedDate,
         fileSize: fileSize,
         rawFileSize: stats.size,
         timestampAdded: Date.parse(currentTime)}); //finally, we can save everything~
     updateMapFile(user, fileMap);
-    
+
     res.send(`https://${user}.yuru.ca/${fileMap[fileMap.length-1].serverPath}`); //sends the url back, since sharex copies the response to clipboard~
+  }
 });
 
 app.post('/deleteFile', async (req, res) => {
@@ -161,8 +179,7 @@ app.get('/prevFilename', (req, res) => {
 
 app.get('/userPfp', (req, res) => {
     let user = req.query.user;
-    let userIndex = findUserIndex(user);
-    res.send({"profileLink":userInfo[userIndex].userPfp});
+    res.send({ "profileLink":userInfo[findUserIndex(user)].userPfp });
 });
 
 app.get('/readFilemap', (req, res) => {
@@ -170,9 +187,8 @@ app.get('/readFilemap', (req, res) => {
     let user = req.headers["x-user"];
     let isValid = verifyApiRequest(user, apiKey);
     if (isValid) {
-        let userIndex = findUserIndex(user);
         let fileMap = JSON.parse(fs.readFileSync(`./files/${user}/filemap.json`, {encoding: 'utf8'}));
-        if (!userInfo[userIndex].dateFormat) {
+        if (!userInfo[findUserIndex(user)].dateFormat) {
             fileMap.forEach(file => {
                 try {
                     file.dateAdded = `${file.dateAdded.split('/')[1]}/${file.dateAdded.split('/')[0]}/${file.dateAdded.split('/')[2]}`; //makes the date anne compliant. anne certification type shit
@@ -239,11 +255,10 @@ app.post('/changeSettings', async (req, res) => {
     let user = req.headers["x-user"];
     let isValid = verifyApiRequest(user, apiKey);
     if (isValid) {
-        let userIndex = findUserIndex(user);
         let settingToChange = req.body;
         switch (settingToChange.changeSetting) { //for more settings later!! :D
             case "dateFormat": //true is MM/DD/YYYY, false is DD/MM/YYYY
-                userInfo[userIndex].dateFormat = settingToChange.dateFormat;
+                userInfo[findUserIndex(user)].dateFormat = settingToChange.dateFormat;
                 break;
             }
         updateUserData();
@@ -251,4 +266,57 @@ app.post('/changeSettings', async (req, res) => {
     } else {
         res.send({"response":"could not verify api key >_<"});
     }
+});
+
+app.get('/readPath', async (req, res) => {
+    let apiKey = req.headers["authorization"];
+    let user = req.headers["x-user"];
+    let isValid = verifyApiRequest(user, apiKey);
+    if (isValid) {
+        let userIndex = findUserIndex(user);
+        if (!userInfo[userIndex].filePath) {
+          userInfo[userIndex].filePath = `~/Server/flanstore/server/files/${user}/`;
+          updateUserData();
+        }
+      res.send({ "path": userInfo[userIndex].filePath });
+    }
+});
+
+app.post('/ls', async (req, res) => {
+  let apiKey = req.headers["authorization"];
+  let user = req.headers["x-user"];
+  let isValid = verifyApiRequest(user, apiKey);
+  if (isValid) {
+    let userIndex = findUserIndex(user);
+    if (userInfo[userIndex].isPrivileged) { //because these require extra permissions to do, we have to check for that too!! :3
+      let searchContent = req.body.searchContent;
+      if (searchContent === "default") {
+        searchContent = `~/Server/flanstore/server/files/${user}/`;
+      }
+      userInfo[userIndex].filePath = searchContent;
+      updateUserData(); //whenever we read the user path again, it'll be updated :3
+      if (searchContent.includes('~')) { //fs doesn't play nicely with tilda, so we have to fucking kill him (sorry oomfie)
+        searchContent = searchContent.replace('~', '/home/sydney'); //should work on flandre, since the home folder is /home/sydney
+      }
+
+      fs.readdir(searchContent, (err, list) => {
+        if (err) {
+          res.send({ "response": "no such directory!! >_<;;" });
+        } else {
+          list = list.filter(item => !(/^\.\/|\.([^.\n\/])/g).test(item)); //removes items if they're .something or something.ext, but not just a plain string :3
+          res.send(list);
+        }
+      });
+    }
+  }
+});
+
+app.get('/privilegeCheck', (req, res) => {
+  //doesn't really need to be secure, so i'm not bothering checking here
+  let user = req.headers["x-user"];
+  if (userInfo[findUserIndex(user)].isPrivileged) {
+    res.send({ "response": true });
+  } else {
+    res.send({ "response": false });
+  }
 });
