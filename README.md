@@ -8,11 +8,11 @@ similar to s-ul.eu, each user has their own subdomain and can drag/drop or uploa
 
 (note: because of being hosted on yuru.ca, disallowed usernames are syd, lilac, api, and of course flanstore as they're used for other website things :p)
 
-  
+
 
 ## dev notes
 
-the backend server requires `express, multer, and cors` to be installed (`npm install express multer cors`) to function properly.
+the backend server requires `ws, express, multer, and cors` to be installed (`npm install ws express multer cors`) to function properly.
 
 you'll also need to create a blank `userinfo.json`, as well as a `/files` folder for the backend to properly create everything for each user, but yeah >w<
 

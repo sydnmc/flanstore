@@ -8,6 +8,10 @@ const crypto = require('crypto'); //for password thingies :3
 const app = express();
 const port = 1402; /* <3 */
 
+const WebSocket = require('ws'); //websocket is used for making a connection with mrrpbot locally, for her to send messages about new users and upload files
+const wsPort = 6767; //i think this is a pretty bouba port :3
+const flanbridge = new WebSocket.Server({ host: '127.0.0.1', port: wsPort }); //binds the ws connection to localhost, just in case ^-^
+
 app.use(cors()); //make cors shut the FUCK up :3
 app.use(express.json()); //parsing messages in json because json is cool and sick
 app.use(express.urlencoded({ extended: true })); //lowkey don't know what this does but yeah sure whatever man
@@ -137,6 +141,19 @@ function fileSizeString(size) {
     return `${Math.round(size*100)/100} ${sizeSuffix}`;
 }
 
+flanbridge.on('connection', ws => {
+  console.log(`mrrpbot connected to websocket on port ${wsPort} >w<`);
+
+  flanbridge.on('message', (message) => {
+      console.log(`Received: ${message}`);
+      flanbridge.send(`Server: ${message}`);
+  });
+
+  flanbridge.on('close', () => {
+    console.log('mrrpbot disconnected from websocket :c,,');
+  });
+});
+
 app.post('/upload', upload.single('file'), async (req, res) => { //file gets saved here, with upload.single
     let user = req.headers["x-user"];
   if (userInfo[findUserIndex(user)].filePath === `/home/sydney/Server/flanstore/files/${user}/` || (!userInfo[findUserIndex(user)].filePath)) {
@@ -235,24 +252,31 @@ app.post('/login', (req, res) => {
 });
 
 app.post('/accountapply', (req, res) => {
-    let accountDetails = req.body; //already sent as a json, like the login :3
-    let salt = crypto.createHash('sha256').update(String(Math.random())).digest('hex'); //creates a unique salt for each user, pseudorandomly (not the best but whatever =w=)
-    console.log(`-- new account application :O ${accountDetails.discord} wants to make ${accountDetails.subdomain}.yuru.ca: `);
-    console.log(`salt for ${accountDetails.discord}: ${salt}`);
-    console.log(`password hash for ${accountDetails.discord}: ${crypto.createHash('sha256').update(accountDetails.password+salt).digest('hex')}`);
-    console.log(`api key for ${accountDetails.discord}: ${crypto.createHash('sha256').update(String(Math.random())).digest('hex')}`);
-    //the way the application works for right now is that it just logs all of this to the console, and then i'll add them in the userinfo.json + create a new part in the cloudflare tunnel + update yuru.ca's DNS rules
-    //would be cool to make this a bit less manual, but for now i think this is okay.
-    //WAIT what if i make mrrpbot send me something
-    //that might be peak...
+  let accountDetails = req.body; //already sent as a json, like the login :3
+  let salt = crypto.createHash('sha256').update(String(Math.random())).digest('hex'); //creates a unique salt for each user, pseudorandomly (not the best but whatever =w=)
+  let passwordHash = crypto.createHash('sha256').update(accountDetails.password+salt).digest('hex');
+  let apiKey = crypto.createHash('sha256').update(String(Math.random())).digest('hex'); //also pseudorandom >_<;;
+  //also hi alice if you're reading this, and i'm sorry if this code sucks >_<
+  //paws at you
+  //paws at you
+  //paws at you
+  //paws at you
 
-    //also hi alice if you're reading this, and i'm sorry if this code sucks >_<
-    //paws at you
-    //paws at you
-    //paws at you
-    //paws at you
+  let mrrpSend = {
+    "type":"userAdd",
+    "userDiscord":accountDetails.discord,
+    "subdomain":accountDetails.subdomain,
+    "salt":salt,
+    "password":passwordHash,
+    "apiKey":apiKey
+  };
 
-    res.send({"response":"applied for account :3"})
+  for (let client of flanbridge.clients) { //should only be 1 client, but... sets are evil
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(JSON.stringify(mrrpSend)); //sends the user account info to the mrrpbot websocket
+    }
+  }
+  res.send({ "response": "applied for account :3" });
 });
 
 app.post('/changeSettings', async (req, res) => {
