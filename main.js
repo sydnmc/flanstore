@@ -3,70 +3,6 @@ const endpoint = "https://anne.yuru.ca"; //for some reason, i cannot touch this.
 //once again,
 //subetecloudflarenoseidesu
 
-//logic to control login functionality, we check if we're logged in below :3
-var loginButton = document.getElementById('login-button');
-async function attemptLogin() {
-  let subdomainInput = document.getElementById('subdomain').value;
-  let passwordInput = document.getElementById('password').value;
-
-  let passwordAttempt = await fetch(`${endpoint}/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ subdomain: subdomainInput, password: passwordInput }),
-  });
-  passwordAttempt = await passwordAttempt.json();
-
-  if (passwordAttempt.loginStatus == true) {
-    localStorage.setItem("key", passwordAttempt.key); //i fucking love cross site scripting ^.^
-    localStorage.setItem("user", subdomainInput);
-    location.reload();
-  } else {
-      try {
-          document.getElementById("login-fail").textContent = "incorrect login, please try again >_<;;"; //if the failed login text already exists, let's not write over it~
-      } catch {
-          loginButton.insertAdjacentHTML("afterend", `<br><span id="login-fail">incorrect login, please try again >_<;;</span>`);
-      }
-  }
-}
-loginButton.addEventListener("click", async () => {
-  await attemptLogin();
-});
-document.getElementById("password").addEventListener("keypress", async function (event) {
-    if (event.key === "Enter") {
-      await attemptLogin();
-    }
-  });
-
-let appliedForAccount = false;
-let applyButton = document.getElementById('apply-button');
-let pfpFile;
-async function applyForAccount() {
-  if (!appliedForAccount) {
-    let dataToSend;
-    let subdomainInput = document.getElementById('application-subdomain').value;
-    let passwordInput = document.getElementById('application-password').value;
-    let discord = document.getElementById('application-discord').value;
-    if (pfpFile) { //if we even have a pfp along with our user at all, we wanna use FormData my behated
-      let dataToSend = new FormData();
-      dataToSend.append('json', { subdomain: subdomainInput, password: passwordInput, discord: discord });
-      dataToSend.append('file', pfpFile);
-    } else {
-      dataToSend = JSON.stringify({ subdomain: subdomainInput, password: passwordInput, discord: discord });
-    }
-
-    let response = await fetch(`${endpoint}/accountapply`, {
-      method: 'POST',
-      body: dataToSend
-    });
-    response = await response.json();
-
-    applyButton.insertAdjacentHTML("afterend", `<br><span>${response.response}</span>`);
-    appliedForAccount = true; //if you've already applied, you can't spam the button~
-  }
-}
-
 function sortTable(table, type) {
   if (descending) {
     switch (type) {
@@ -96,31 +32,98 @@ function sortTable(table, type) {
   return table;
 }
 
-var loginArea = document.getElementById('log-in-area');
-var accountApplyArea = document.getElementById('account-apply-area');
-document.getElementById('account-apply-text').addEventListener("click", () => {
-  loginArea.style.display = "none";
-  accountApplyArea.style.display = "grid";
-});
-document.getElementById('back-to-login').addEventListener("click", () => {
-  loginArea.style.display = "grid";
-  accountApplyArea.style.display = "none";
-});
+let pfpFile;
+let appliedForAccount = false;
+async function applyForAccount() {
+  if (!appliedForAccount) {
+    let dataToSend;
+    let subdomainInput = document.getElementById('application-subdomain').value;
+    let passwordInput = document.getElementById('application-password').value;
+    let discord = document.getElementById('application-discord').value;
+    if (pfpFile) { //if we even have a pfp along with our user at all, we wanna use FormData my behated
+      let dataToSend = new FormData();
+      dataToSend.append('json', { subdomain: subdomainInput, password: passwordInput, discord: discord });
+      dataToSend.append('file', pfpFile);
+    } else {
+      dataToSend = JSON.stringify({ subdomain: subdomainInput, password: passwordInput, discord: discord });
+    }
 
-applyButton.addEventListener("click", async() => { await applyForAccount(); });
-document.getElementById('application-password').addEventListener("keypress", async function (event) {
-  if (event.key === 'Enter') {
-    await applyForAccount();
+    let response = await fetch(`${endpoint}/accountapply`, {
+      method: 'POST',
+      body: dataToSend
+    });
+    response = await response.json();
+
+    applyButton.insertAdjacentHTML("afterend", `<br><span>${response.response}</span>`);
+    appliedForAccount = true; //if you've already applied, you can't spam the button~
   }
-});
+}
 
-var pfpUpload = document.getElementById('pfp-upload');
-pfpUpload.addEventListener('change', (e) => {
-  pfpFile = pfpUpload.files[0]; //lets the pfp file be passed along to the rest of the upload logic~
-});
+async function attemptLogin() {
+  let subdomainInput = document.getElementById('subdomain').value;
+  let passwordInput = document.getElementById('password').value;
+
+  let passwordAttempt = await fetch(`${endpoint}/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ subdomain: subdomainInput, password: passwordInput }),
+  });
+  passwordAttempt = await passwordAttempt.json();
+
+  if (passwordAttempt.loginStatus == true) {
+    localStorage.setItem("key", passwordAttempt.key); //i fucking love cross site scripting ^.^
+    localStorage.setItem("user", subdomainInput);
+    location.reload();
+  } else {
+      try {
+          document.getElementById("login-fail").textContent = "incorrect login, please try again >_<;;"; //if the failed login text already exists, let's not write over it~
+      } catch {
+          loginButton.insertAdjacentHTML("afterend", `<br><span id="login-fail">incorrect login, please try again >_<;;</span>`);
+      }
+  }
+}
 
 if (!localStorage.getItem("key")) { //if we don't have a key yet, then we wanna log in~
+  //moved this up to make sure that the key check is the absolute first thing that gets done >w<
+  //it appears as though some browsers might not like this check being below adding event listeners for things that aren't visible...? works on my machine :p but not others
   document.getElementById('not-logged-in').style.display = "flex";
+
+  //now that we for sure have other things loaded, we can mess with the buttons and add event listeners and stuff :3
+  let applyButton = document.getElementById('apply-button');
+  let loginButton = document.getElementById('login-button');
+  loginButton.addEventListener("click", async () => {
+    await attemptLogin();
+  });
+  document.getElementById("password").addEventListener("keypress", async function (event) {
+      if (event.key === "Enter") {
+        await attemptLogin();
+      }
+    });
+
+  let loginArea = document.getElementById('log-in-area');
+  let accountApplyArea = document.getElementById('account-apply-area');
+  document.getElementById('account-apply-text').addEventListener("click", () => {
+    loginArea.style.display = "none";
+    accountApplyArea.style.display = "grid";
+  });
+  document.getElementById('back-to-login').addEventListener("click", () => {
+    loginArea.style.display = "grid";
+    accountApplyArea.style.display = "none";
+  });
+
+  applyButton.addEventListener("click", async() => { await applyForAccount(); });
+  document.getElementById('application-password').addEventListener("keypress", async function (event) {
+    if (event.key === 'Enter') {
+      await applyForAccount();
+    }
+  });
+
+  let pfpUpload = document.getElementById('pfp-upload');
+  pfpUpload.addEventListener('change', (e) => {
+    pfpFile = pfpUpload.files[0]; //lets the pfp file be passed along to the rest of the upload logic~
+  });
 } else { //if we do have a key, then everything else can run!!
   const currentDomain = `${localStorage.getItem("user")}.yuru.ca`;
   document.getElementById('page-url').innerText = currentDomain;
