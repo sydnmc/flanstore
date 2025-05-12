@@ -34,7 +34,6 @@
         <form method="post" enctype="multipart/form-data" id="file-submit-form" onsubmit="return false;">
           <input type="file" name="file"/>
           <button>upload~ :3</button>
-          <p>note: uploading this way will always cause the page to reload >.<</p>
         </form>
         <div class="upload-divider"></div>
         <button id="cancel-upload">cancel</button>
@@ -60,6 +59,10 @@
         <h1>if you don't have an account...</h1>
         <p>feel free to apply for one here~!</p>
         <div>
+          <span>discord handle: </span>
+          <input type="text" id="application-discord">
+        </div>
+        <div>
           <span>subdomain: </span>
           <input type="username" id="application-subdomain"/>
         </div>
@@ -67,11 +70,9 @@
           <span>password: </span>
           <input type="password" id="application-password">
         </div>
-        <div>
-          <span>discord handle: </span>
-          <input type="text" id="application-discord">
-        </div>
         <p>(the discord handle is just so we can identify who you are, that's all~)</p>
+        <input id="pfp-upload" type="file" name="file" accept=".jpg, .jpeg, .png, .webp"/>
+        <p>feel free to also add a pfp here!! ^-^</p>
         <button id="apply-button">apply</button>
         <p class="white-click-text" id="back-to-login">click here to go back to the login screen~</p>
       </div>

@@ -1,4 +1,4 @@
-const endpoint = "http://127.0.0.1:1402"; //for some reason, i cannot touch this. i want to make it api.flanstore, but anne is the only thing that works.
+const endpoint = "https://anne.yuru.ca"; //for some reason, i cannot touch this. i want to make it api.flanstore, but anne is the only thing that works.
 //could it be cloudflare fuckery? who knows. all i know is that this works, and other things don't :3
 //once again,
 //subetecloudflarenoseidesu
@@ -41,18 +41,24 @@ document.getElementById("password").addEventListener("keypress", async function 
 
 let appliedForAccount = false;
 let applyButton = document.getElementById('apply-button');
+let pfpFile;
 async function applyForAccount() {
   if (!appliedForAccount) {
+    let dataToSend;
     let subdomainInput = document.getElementById('application-subdomain').value;
     let passwordInput = document.getElementById('application-password').value;
     let discord = document.getElementById('application-discord').value;
+    if (pfpFile) { //if we even have a pfp along with our user at all, we wanna use FormData my behated
+      let dataToSend = new FormData();
+      dataToSend.append('json', { subdomain: subdomainInput, password: passwordInput, discord: discord });
+      dataToSend.append('file', pfpFile);
+    } else {
+      dataToSend = JSON.stringify({ subdomain: subdomainInput, password: passwordInput, discord: discord });
+    }
 
     let response = await fetch(`${endpoint}/accountapply`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ subdomain: subdomainInput, password: passwordInput, discord: discord }),
+      body: dataToSend
     });
     response = await response.json();
 
@@ -102,10 +108,15 @@ document.getElementById('back-to-login').addEventListener("click", () => {
 });
 
 applyButton.addEventListener("click", async() => { await applyForAccount(); });
-document.getElementById('application-discord').addEventListener("keypress", async function (event) {
+document.getElementById('application-password').addEventListener("keypress", async function (event) {
   if (event.key === 'Enter') {
     await applyForAccount();
   }
+});
+
+var pfpUpload = document.getElementById('pfp-upload');
+pfpUpload.addEventListener('change', (e) => {
+  pfpFile = pfpUpload.files[0]; //lets the pfp file be passed along to the rest of the upload logic~
 });
 
 if (!localStorage.getItem("key")) { //if we don't have a key yet, then we wanna log in~

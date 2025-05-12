@@ -58,6 +58,15 @@ const storage = multer.diskStorage({
               }
             }
           }
+        } else {
+          //if the user is uploading a pfp, then they can save something unprivleged, since we don't send any headers with those (ofc since no user = no auth)
+          //!! WARNING !! this is lowkey a security risk :3
+          //but i'm sure it's fine :3 users should only be allowed to upload image file types (i should verify this on the backend tho,,)
+          //alice if u see this have fun trying to hack me >w<
+
+          console.log('meow?');
+          console.log(file);
+          console.log(req);
         }
         cb(null, saveLocation);
     },
@@ -141,22 +150,47 @@ function fileSizeString(size) {
     return `${Math.round(size*100)/100} ${sizeSuffix}`;
 }
 
-flanbridge.on('connection', ws => {
+flanbridge.on('connection', connection => { //we need to get the connection from here in order to do things with it :3 took longer than i care to admit to figure that out..,
   console.log(`mrrpbot connected to websocket on port ${wsPort} >w<`);
 
-  flanbridge.on('message', (message) => {
-      console.log(`Received: ${message}`);
-      flanbridge.send(`Server: ${message}`);
+  connection.on('message', (message) => {
+    console.log(message.userInfo);
+    message = JSON.parse(message);
+    console.log(`heard back from mrrpbot aaaaa >_<,,`);
+    if (message.type === "userAdd" && message.result === "accept") {
+      console.log(`adding subdomain ${message.userInfo.subdomain}, associated with user ${message.userInfo.discord} :D`);
+      userInfo.push({
+        "subdomain": message.userInfo.subdomain,
+        "saltge": message.userInfo.salt,
+        "password": message.userInfo.password,
+        "key": message.userInfo.apiKey,
+        "isPrivileged": false
+      });
+      updateUserData();
+      console.log(`successfully added ${message.userInfo.subdomain}.yuru.ca >w<`);
+    } else {
+      console.log(`she didn't tell me to do anything, tho,, >_<;;`);
+    }
   });
 
-  flanbridge.on('close', () => {
+  connection.on('close', () => {
     console.log('mrrpbot disconnected from websocket :c,,');
   });
 });
 
-app.post('/upload', upload.single('file'), async (req, res) => { //file gets saved here, with upload.single
+flanbridge.on('message', (message) => {
+    console.log(`heard back from mrrpbot aaaaa >_<,,: ${message}`);
+});
+
+flanbridge.on('error', console.error);
+
+app.post('/upload', upload.single('file'), async (req, res, next) => { //file gets saved here, with upload.single
+  req.on('data', chunk => console.log('chunk', chunk.length));
+  req.on('end', () => console.log('req ended'));
+  next();
+  console.log('finished upload~');
     let user = req.headers["x-user"];
-  if (userInfo[findUserIndex(user)].filePath === `/home/sydney/Server/flanstore/files/${user}/` || (!userInfo[findUserIndex(user)].filePath)) {
+    if (userInfo[findUserIndex(user)].filePath === `/home/sydney/Server/flanstore/files/${user}/` || (!userInfo[findUserIndex(user)].filePath)) {
     //if we're not using the normal file path, don't bother adding it to the file map :3
     //this checks both for the default file map, as well as if it's not defined
 
@@ -174,6 +208,7 @@ app.post('/upload', upload.single('file'), async (req, res) => { //file gets sav
         rawFileSize: stats.size,
         timestampAdded: Date.parse(currentTime)}); //finally, we can save everything~
     updateMapFile(user, fileMap);
+      console.log('everything worked wtf');
 
     res.send(`https://${user}.yuru.ca/${fileMap[fileMap.length-1].serverPath}`); //sends the url back, since sharex copies the response to clipboard~
   }
@@ -251,8 +286,9 @@ app.post('/login', (req, res) => {
     }
 });
 
-app.post('/accountapply', (req, res) => {
+app.post('/accountapply', upload.single('file'), (req, res) => {
   let accountDetails = req.body; //already sent as a json, like the login :3
+  console.log(req.body);
   let salt = crypto.createHash('sha256').update(String(Math.random())).digest('hex'); //creates a unique salt for each user, pseudorandomly (not the best but whatever =w=)
   let passwordHash = crypto.createHash('sha256').update(accountDetails.password+salt).digest('hex');
   let apiKey = crypto.createHash('sha256').update(String(Math.random())).digest('hex'); //also pseudorandom >_<;;
