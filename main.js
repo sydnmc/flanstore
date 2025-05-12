@@ -1,4 +1,4 @@
-const endpoint = "https://anne.yuru.ca"; //for some reason, i cannot touch this. i want to make it api.flanstore, but anne is the only thing that works.
+const endpoint = "http://127.0.0.1:1402"; //for some reason, i cannot touch this. i want to make it api.flanstore, but anne is the only thing that works.
 //could it be cloudflare fuckery? who knows. all i know is that this works, and other things don't :3
 //once again,
 //subetecloudflarenoseidesu
@@ -35,21 +35,25 @@ function sortTable(table, type) {
 let pfpFile;
 let appliedForAccount = false;
 async function applyForAccount() {
+  console.log('meow');
   if (!appliedForAccount) {
     let dataToSend;
     let subdomainInput = document.getElementById('application-subdomain').value;
     let passwordInput = document.getElementById('application-password').value;
     let discord = document.getElementById('application-discord').value;
+    let typeHeader = { 'Content-Type': 'application/json' };
     if (pfpFile) { //if we even have a pfp along with our user at all, we wanna use FormData my behated
       let dataToSend = new FormData();
       dataToSend.append('json', { subdomain: subdomainInput, password: passwordInput, discord: discord });
       dataToSend.append('file', pfpFile);
+      typeHeader = { 'Content-Type': 'multipart/form-data' };
     } else {
       dataToSend = JSON.stringify({ subdomain: subdomainInput, password: passwordInput, discord: discord });
     }
 
     let response = await fetch(`${endpoint}/accountapply`, {
       method: 'POST',
+      headers: typeHeader,
       body: dataToSend
     });
     response = await response.json();

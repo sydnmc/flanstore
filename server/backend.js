@@ -288,7 +288,7 @@ app.post('/login', (req, res) => {
 
 app.post('/accountapply', upload.single('file'), (req, res) => {
   let accountDetails = req.body; //already sent as a json, like the login :3
-  console.log(req.body);
+  //we do wanna support
   let salt = crypto.createHash('sha256').update(String(Math.random())).digest('hex'); //creates a unique salt for each user, pseudorandomly (not the best but whatever =w=)
   let passwordHash = crypto.createHash('sha256').update(accountDetails.password+salt).digest('hex');
   let apiKey = crypto.createHash('sha256').update(String(Math.random())).digest('hex'); //also pseudorandom >_<;;
