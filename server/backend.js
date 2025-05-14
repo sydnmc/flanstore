@@ -184,11 +184,7 @@ flanbridge.on('message', (message) => {
 
 flanbridge.on('error', console.error);
 
-app.post('/upload', upload.single('file'), async (req, res, next) => { //file gets saved here, with upload.single
-  req.on('data', chunk => console.log('chunk', chunk.length));
-  req.on('end', () => console.log('req ended'));
-  next();
-  console.log('finished upload~');
+app.post('/upload', upload.single('file'), async (req, res) => { //file gets saved here, with upload.single
     let user = req.headers["x-user"];
     if (userInfo[findUserIndex(user)].filePath === `/home/sydney/Server/flanstore/files/${user}/` || (!userInfo[findUserIndex(user)].filePath)) {
     //if we're not using the normal file path, don't bother adding it to the file map :3
@@ -208,7 +204,6 @@ app.post('/upload', upload.single('file'), async (req, res, next) => { //file ge
         rawFileSize: stats.size,
         timestampAdded: Date.parse(currentTime)}); //finally, we can save everything~
     updateMapFile(user, fileMap);
-      console.log('everything worked wtf');
 
     res.send(`https://${user}.yuru.ca/${fileMap[fileMap.length-1].serverPath}`); //sends the url back, since sharex copies the response to clipboard~
   }
