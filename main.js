@@ -1,4 +1,4 @@
-const endpoint = "http://127.0.0.1:1402"; //for some reason, i cannot touch this. i want to make it api.flanstore, but anne is the only thing that works.
+const endpoint = "https://anne.yuru.ca"; //for some reason, i cannot touch this. i want to make it api.flanstore, but anne is the only thing that works.
 //could it be cloudflare fuckery? who knows. all i know is that this works, and other things don't :3
 //once again,
 //subetecloudflarenoseidesu
