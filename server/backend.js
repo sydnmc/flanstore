@@ -52,7 +52,7 @@ const storage = multer.diskStorage({
             let filePath = userInfo[userIndex].filePath;
             if (filePath) { //checks if we even have a file path saved, because we may not
               if (filePath.includes('~')) { //will sometimes have tilda hanging around
-                saveLocation = filePath.replace('~', '/home/sydney');
+                saveLocation = filePath.replace('~', '/home/yurukyan');
               } else {
                 saveLocation = filePath;
               }
@@ -186,7 +186,7 @@ flanbridge.on('error', console.error);
 
 app.post('/upload', upload.single('file'), async (req, res) => { //file gets saved here, with upload.single
     let user = req.headers["x-user"];
-    if (userInfo[findUserIndex(user)].filePath === `/home/sydney/Server/flanstore/files/${user}/` || (!userInfo[findUserIndex(user)].filePath)) {
+    if (userInfo[findUserIndex(user)].filePath === `/home/yurukyan/Servers/flanstore/files/${user}/` || (!userInfo[findUserIndex(user)].filePath)) {
     //if we're not using the normal file path, don't bother adding it to the file map :3
     //this checks both for the default file map, as well as if it's not defined
 
@@ -335,7 +335,7 @@ app.get('/readPath', async (req, res) => {
     if (isValid) {
         let userIndex = findUserIndex(user);
         if (!userInfo[userIndex].filePath) {
-          userInfo[userIndex].filePath = `/home/sydney/Server/flanstore/files/${user}/`;
+          userInfo[userIndex].filePath = `/home/yurukyan/Servers/flanstore/files/${user}/`;
           updateUserData();
         }
       res.send({ "path": userInfo[userIndex].filePath });
@@ -351,12 +351,12 @@ app.post('/ls', async (req, res) => {
     if (userInfo[userIndex].isPrivileged) { //because these require extra permissions to do, we have to check for that too!! :3
       let searchContent = req.body.searchContent;
       if (searchContent === "default") {
-        searchContent = `/home/sydney/Server/flanstore/files/${user}/`;
+        searchContent = `/home/yurukyan/Servers/flanstore/files/${user}/`;
       }
       userInfo[userIndex].filePath = searchContent;
       updateUserData(); //whenever we read the user path again, it'll be updated :3
       if (searchContent.includes('~')) { //fs doesn't play nicely with tilda, so we have to fucking kill him (sorry oomfie)
-        searchContent = searchContent.replace('~', '/home/sydney'); //should work on flandre, since the home folder is /home/sydney
+        searchContent = searchContent.replace('~', '/home/yurukyan'); //should work on yuyuko, since the home folder is /home/yurukyan
       }
 
       fs.readdir(searchContent, (err, list) => {
