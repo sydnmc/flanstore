@@ -44,7 +44,7 @@ const storage = multer.diskStorage({
         let apiKey = req.headers["authorization"];
         let user = req.headers["x-user"];
         let isValid = verifyApiRequest(user, apiKey);
-        let saveLocation = `./files/${user}`; //default save location
+        let saveLocation = `/home/yurukyan/Servers/flanstore/files/${user}`; //default save location
 
         if (isValid) {
           let userIndex = findUserIndex(user);
@@ -186,6 +186,8 @@ flanbridge.on('error', console.error);
 
 app.post('/upload', upload.single('file'), async (req, res) => { //file gets saved here, with upload.single
     let user = req.headers["x-user"];
+    console.log(`our filepath is: ${userInfo[findUserIndex(user)].filePath}`);
+    console.log(`to save a file, we need to be in /home/yurukyan/Servers/flanstore/files/${user}/`);
     if (userInfo[findUserIndex(user)].filePath === `/home/yurukyan/Servers/flanstore/files/${user}/` || (!userInfo[findUserIndex(user)].filePath)) {
     //if we're not using the normal file path, don't bother adding it to the file map :3
     //this checks both for the default file map, as well as if it's not defined
