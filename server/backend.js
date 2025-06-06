@@ -28,9 +28,8 @@ userInfo.forEach(user => {
             }
         }); //just writes [] to the filepath to create filemap.json
     }
-    app.use(express.static(`./files/${user.subdomain}`)); //each user needs their own root function like this :3
 });
-app.use(express.static(`./api`)); //also serves everything in the api folder, which for now is just user pfps :3
+app.use(express.static(`./api`)); //serves everything in the api folder, which for now is just user pfps :3
 
 app.listen(port, () => {
     console.log(`flanstore server - port ${port}~`);
@@ -268,7 +267,6 @@ app.post('/login', (req, res) => {
 
 app.post('/accountapply', upload.single('file'), (req, res) => {
   let accountDetails = req.body; //already sent as a json, like the login :3
-  //we do wanna support
   let salt = crypto.createHash('sha256').update(String(Math.random())).digest('hex'); //creates a unique salt for each user, pseudorandomly (not the best but whatever =w=)
   let passwordHash = crypto.createHash('sha256').update(accountDetails.password+salt).digest('hex');
   let apiKey = crypto.createHash('sha256').update(String(Math.random())).digest('hex'); //also pseudorandom >_<;;
