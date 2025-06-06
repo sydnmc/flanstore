@@ -1,7 +1,4 @@
-const endpoint = "https://anne.yuru.ca"; //for some reason, i cannot touch this. i want to make it api.flanstore, but anne is the only thing that works.
-//could it be cloudflare fuckery? who knows. all i know is that this works, and other things don't :3
-//once again,
-//subetecloudflarenoseidesu
+const endpoint = "https://flanapi.yuru.ca";
 
 function sortTable(table, type) {
   if (descending) {
@@ -293,63 +290,6 @@ if (!localStorage.getItem("key")) { //if we don't have a key yet, then we wanna 
     return await pathInfo.json();
   }
 
-  let destinationBox = document.getElementById("destination-select");
-  let destinationSearchBar = document.getElementById("destination-area");
-  document.getElementById("upload-selection").addEventListener("click", async () => {
-      destinationBox.style.display = "flex";
-      let path = await getCurrentPath();
-      destinationSearchBar.value = path.path; //path.path is a bit silly now that i think about it >_<;;
-      console.log(path);
-  });
-  destinationSearchBar.addEventListener("keypress", async function (event) {
-    if (event.key === "Enter") {
-      let directoryContents = await fetch(`${endpoint}/ls`, {
-        method: 'POST',
-        headers: {
-          'Authorization': localStorage.getItem("key"),
-          'X-User': localStorage.getItem("user"),
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ "searchContent":destinationSearchBar.value }),
-      });
-      directoryContents = await directoryContents.json();
-      let lsContainer = document.getElementById('ls-output');
-      let lsContents = '';
-      if (directoryContents.length == undefined) { //if we get a directory that doesn't exist, not just an empty one :3
-        lsContents = directoryContents.response;
-      } else if (directoryContents.length == 0) { //if our directory is actually empty
-        lsContents = 'no additional directories o.o';
-      } else {
-        lsContents = `<div class="ls-column">`;
-        let fileCount = 0;
-        directoryContents.forEach(file => {
-          if (fileCount % 4 == 0) { //every 4 files, i want to create a new line :3
-            lsContents = lsContents + `</div><div class="ls-column">`;
-          }
-          lsContents = lsContents + `<span>${file}</span><br>`;
-          fileCount++;
-        });
-      }
-      lsContainer.innerHTML = lsContents;
-    }
-  });
-  document.getElementById('set-default-dest').addEventListener("click", async() => {
-    await fetch(`${endpoint}/ls`, {
-      method: 'POST',
-      headers: {
-        'Authorization': localStorage.getItem("key"),
-        'X-User': localStorage.getItem("user"),
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ "searchContent":"default" }),
-    });
-    destinationBox.style.display = "none"; //also closes out of the container afterwards
-  });
-
-  document.getElementById("close-destination").addEventListener("click", () => {
-    destinationBox.style.display = "none";
-  });
-
   /* preventing default drop actions */
   window.addEventListener('dragover', e => e.preventDefault());
   window.addEventListener('drop', e => e.preventDefault());
@@ -399,17 +339,6 @@ if (!localStorage.getItem("key")) { //if we don't have a key yet, then we wanna 
     pfpLink = await pfpLink.json();
     userPfp.src = pfpLink.profileLink;
     userPfp.alt = `${localStorage.getItem("user")}'s pfp`;
-
-    let isPrivileged = await fetch(`${endpoint}/privilegeCheck`, {
-      method: 'GET',
-      headers: {
-        'X-User': localStorage.getItem("user"),
-      },
-    });
-    isPrivileged = await isPrivileged.json();
-    if (isPrivileged.response) {
-      document.getElementById('upload-selection').style.display = "block";
-    }
 
     fillTable(false);
   })();

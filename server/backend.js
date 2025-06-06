@@ -44,21 +44,8 @@ const storage = multer.diskStorage({
         let apiKey = req.headers["authorization"];
         let user = req.headers["x-user"];
         let isValid = verifyApiRequest(user, apiKey);
-        let saveLocation = `/home/yurukyan/Servers/flanstore/files/${user}`; //default save location
 
-        if (isValid) {
-          let userIndex = findUserIndex(user);
-          if (userInfo[userIndex].isPrivileged) { //requires extra special privilege :O
-            let filePath = userInfo[userIndex].filePath;
-            if (filePath) { //checks if we even have a file path saved, because we may not
-              if (filePath.includes('~')) { //will sometimes have tilda hanging around
-                saveLocation = filePath.replace('~', '/home/yurukyan');
-              } else {
-                saveLocation = filePath;
-              }
-            }
-          }
-        } else {
+        if (!isValid) {
           //if the user is uploading a pfp, then they can save something unprivleged, since we don't send any headers with those (ofc since no user = no auth)
           //!! WARNING !! this is lowkey a security risk :3
           //but i'm sure it's fine :3 users should only be allowed to upload image file types (i should verify this on the backend tho,,)
@@ -67,8 +54,9 @@ const storage = multer.diskStorage({
           console.log('meow?');
           console.log(file);
           console.log(req);
+        } else {
+          cb(null, `./files/${user}`);
         }
-        cb(null, saveLocation);
     },
     filename: (req, file, cb) => {
         //first, checking if we have permission to upload the file
@@ -163,8 +151,7 @@ flanbridge.on('connection', connection => { //we need to get the connection from
         "subdomain": message.userInfo.subdomain,
         "saltge": message.userInfo.salt,
         "password": message.userInfo.password,
-        "key": message.userInfo.apiKey,
-        "isPrivileged": false
+        "key": message.userInfo.apiKey
       });
       updateUserData();
       console.log(`successfully added ${message.userInfo.subdomain}.yuru.ca >w<`);
@@ -342,43 +329,4 @@ app.get('/readPath', async (req, res) => {
         }
       res.send({ "path": userInfo[userIndex].filePath });
     }
-});
-
-app.post('/ls', async (req, res) => {
-  let apiKey = req.headers["authorization"];
-  let user = req.headers["x-user"];
-  let isValid = verifyApiRequest(user, apiKey);
-  if (isValid) {
-    let userIndex = findUserIndex(user);
-    if (userInfo[userIndex].isPrivileged) { //because these require extra permissions to do, we have to check for that too!! :3
-      let searchContent = req.body.searchContent;
-      if (searchContent === "default") {
-        searchContent = `/home/yurukyan/Servers/flanstore/files/${user}/`;
-      }
-      userInfo[userIndex].filePath = searchContent;
-      updateUserData(); //whenever we read the user path again, it'll be updated :3
-      if (searchContent.includes('~')) { //fs doesn't play nicely with tilda, so we have to fucking kill him (sorry oomfie)
-        searchContent = searchContent.replace('~', '/home/yurukyan'); //should work on yuyuko, since the home folder is /home/yurukyan
-      }
-
-      fs.readdir(searchContent, (err, list) => {
-        if (err) {
-          res.send({ "response": "no such directory!! >_<;;" });
-        } else {
-          list = list.filter(item => !(/^\.\/|\.([^.\n\/])/g).test(item)); //removes items if they're .something or something.ext, but not just a plain string :3
-          res.send(list);
-        }
-      });
-    }
-  }
-});
-
-app.get('/privilegeCheck', (req, res) => {
-  //doesn't really need to be secure, so i'm not bothering checking here
-  let user = req.headers["x-user"];
-  if (userInfo[findUserIndex(user)].isPrivileged) {
-    res.send({ "response": true });
-  } else {
-    res.send({ "response": false });
-  }
 });
