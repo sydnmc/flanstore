@@ -173,9 +173,6 @@ flanbridge.on('error', console.error);
 
 app.post('/upload', upload.single('file'), async (req, res) => { //file gets saved here, with upload.single
     let user = req.headers["x-user"];
-    console.log(`our filepath is: ${userInfo[findUserIndex(user)].filePath}`);
-    console.log(`to save a file, we need to be in /home/yurukyan/Servers/flanstore/files/${user}/`);
-    if (userInfo[findUserIndex(user)].filePath === `/home/yurukyan/Servers/flanstore/files/${user}/` || (!userInfo[findUserIndex(user)].filePath)) {
     //if we're not using the normal file path, don't bother adding it to the file map :3
     //this checks both for the default file map, as well as if it's not defined
 
@@ -195,7 +192,6 @@ app.post('/upload', upload.single('file'), async (req, res) => { //file gets sav
     updateMapFile(user, fileMap);
 
     res.send(`https://${user}.yuru.ca/${fileMap[fileMap.length-1].serverPath}`); //sends the url back, since sharex copies the response to clipboard~
-  }
 });
 
 app.post('/deleteFile', async (req, res) => {
@@ -314,19 +310,5 @@ app.post('/changeSettings', async (req, res) => {
         res.send({"response":"changed successfully~ :3"});
     } else {
         res.send({"response":"could not verify api key >_<"});
-    }
-});
-
-app.get('/readPath', async (req, res) => {
-    let apiKey = req.headers["authorization"];
-    let user = req.headers["x-user"];
-    let isValid = verifyApiRequest(user, apiKey);
-    if (isValid) {
-        let userIndex = findUserIndex(user);
-        if (!userInfo[userIndex].filePath) {
-          userInfo[userIndex].filePath = `/home/yurukyan/Servers/flanstore/files/${user}/`;
-          updateUserData();
-        }
-      res.send({ "path": userInfo[userIndex].filePath });
     }
 });
